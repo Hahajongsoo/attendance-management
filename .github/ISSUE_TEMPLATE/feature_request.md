@@ -1,6 +1,6 @@
 ---
 name: 기능 요청
-about: 새로운 기능을 제안해주세요!
+about: 새로운 기능 추가를 위한 템플릿입니다.
 title: '[FEATURE] '
 labels: ['enhancement']
 ---
