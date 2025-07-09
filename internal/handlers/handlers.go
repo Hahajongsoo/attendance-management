@@ -18,6 +18,30 @@ func NewHandler(db *sql.DB) *Handler {
 	return &Handler{db: db}
 }
 
+func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Path
+	switch {
+	case path == "/students":
+		h.StudentHandler(w, r)
+	case strings.HasPrefix(path, "/students/"):
+		segments := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
+		if len(segments) == 2 {
+			h.StudentByIDHandler(w, r)
+			return
+		}
+
+		if len(segments) == 3 && segments[2] == "attendance" {
+			h.AttendanceHandler(w, r)
+			return
+		}
+
+		http.Error(w, "Not Found", http.StatusNotFound)
+		return
+	case strings.HasPrefix(path, "/attendance/"):
+		h.AttendanceByDateHandler(w, r)
+	}
+}
+
 func (h *Handler) StudentHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
