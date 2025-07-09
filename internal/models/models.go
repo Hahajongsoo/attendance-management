@@ -1,6 +1,10 @@
 package models
 
-import "time"
+import (
+	"fmt"
+	"strings"
+	"time"
+)
 
 type Student struct {
 	StudentID   int    `json:"student_id"`
@@ -11,9 +15,45 @@ type Student struct {
 }
 
 type Attendance struct {
-	StudentID int       `json:"student_id"`
-	Date      time.Time `json:"date"`
-	CheckIn   time.Time `json:"check_in"`
-	CheckOut  time.Time `json:"check_out"`
-	Status    string    `json:"status"`
+	StudentID int      `json:"student_id"`
+	Date      DateOnly `json:"date"`
+	CheckIn   TimeOnly `json:"check_in"`
+	CheckOut  TimeOnly `json:"check_out"`
+	Status    string   `json:"status"`
+}
+
+type TimeOnly struct {
+	time.Time
+}
+
+func (t *TimeOnly) UnmarshalJSON(b []byte) error {
+	s := strings.Trim(string(b), `"`)
+	parsed, err := time.Parse("15:04", s)
+	if err != nil {
+		return err
+	}
+	t.Time = parsed
+	return nil
+}
+
+func (t TimeOnly) MarshalJSON() ([]byte, error) {
+	return fmt.Appendf(nil, "\"%s\"", t.Format("15:04")), nil
+}
+
+type DateOnly struct {
+	time.Time
+}
+
+func (d *DateOnly) UnmarshalJSON(b []byte) error {
+	s := strings.Trim(string(b), `"`)
+	parsed, err := time.Parse("2006-01-02", s)
+	if err != nil {
+		return err
+	}
+	d.Time = parsed
+	return nil
+}
+
+func (d DateOnly) MarshalJSON() ([]byte, error) {
+	return fmt.Appendf(nil, "\"%s\"", d.Format("2006-01-02")), nil
 }
