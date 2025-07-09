@@ -237,7 +237,7 @@ func (h *Handler) GetAttendance(w http.ResponseWriter, r *http.Request) {
 
 	row := h.db.QueryRow("SELECT * FROM attendance WHERE student_id = $1 AND date = $2", studentID, date)
 	var attendance models.Attendance
-	err := row.Scan(&attendance.StudentID, &attendance.Date, &attendance.CheckIn, &attendance.CheckOut, &attendance.Status)
+	err := row.Scan(&attendance.StudentID, &attendance.Date.Time, &attendance.CheckIn.Time, &attendance.CheckOut.Time, &attendance.Status)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			http.Error(w, "Attendance not found", http.StatusNotFound)
