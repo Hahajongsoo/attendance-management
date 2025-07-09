@@ -30,7 +30,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		if len(segments) == 3 && segments[2] == "attendance" {
+		if len(segments) >= 3 && segments[2] == "attendance" {
 			h.AttendanceHandler(w, r)
 			return
 		}
