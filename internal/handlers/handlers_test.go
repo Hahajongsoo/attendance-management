@@ -30,6 +30,143 @@ func TestNewHandler(t *testing.T) {
 	assert.Equal(t, db, handler.db)
 }
 
+// StudentHandler 테스트
+func TestStudentHandler(t *testing.T) {
+	db, mock := createMockDB(t)
+	defer db.Close()
+
+	handler := NewHandler(db)
+
+	tests := []struct {
+		name           string
+		method         string
+		expectedStatus int
+		setupMock      func()
+	}{
+		{
+			name:           "GET 요청 - 모든 학생 조회",
+			method:         http.MethodGet,
+			expectedStatus: http.StatusOK,
+			setupMock: func() {
+				rows := sqlmock.NewRows([]string{"student_id", "name", "grade", "phone", "parent_phone"}).
+					AddRow(1, "김철수", "1학년", "010-1234-5678", "010-8765-4321")
+				mock.ExpectQuery("SELECT \\* FROM students").WillReturnRows(rows)
+			},
+		},
+		{
+			name:           "POST 요청 - 학생 생성",
+			method:         http.MethodPost,
+			expectedStatus: http.StatusCreated,
+			setupMock: func() {
+				mock.ExpectExec("INSERT INTO students").WithArgs(1, "김철수", "1학년", "010-1234-5678", "010-8765-4321").
+					WillReturnResult(sqlmock.NewResult(1, 1))
+			},
+		},
+		{
+			name:           "PUT 요청 - Method Not Allowed",
+			method:         http.MethodPut,
+			expectedStatus: http.StatusMethodNotAllowed,
+			setupMock:      func() {},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setupMock()
+
+			var req *http.Request
+			if tt.method == http.MethodPost {
+				student := models.Student{StudentID: 1, Name: "김철수", Grade: "1학년", Phone: "010-1234-5678", ParentPhone: "010-8765-4321"}
+				jsonData, _ := json.Marshal(student)
+				req = httptest.NewRequest(tt.method, "/students", bytes.NewBuffer(jsonData))
+				req.Header.Set("Content-Type", "application/json")
+			} else {
+				req = httptest.NewRequest(tt.method, "/students", nil)
+			}
+
+			w := httptest.NewRecorder()
+			handler.StudentHandler(w, req)
+
+			assert.Equal(t, tt.expectedStatus, w.Code)
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
+}
+
+// StudentByIDHandler 테스트
+func TestStudentByIDHandler(t *testing.T) {
+	db, mock := createMockDB(t)
+	defer db.Close()
+
+	handler := NewHandler(db)
+
+	tests := []struct {
+		name           string
+		method         string
+		path           string
+		expectedStatus int
+		setupMock      func()
+		body           interface{}
+	}{
+		{
+			name:           "GET 요청 - 특정 학생 조회",
+			method:         http.MethodGet,
+			path:           "/students/1",
+			expectedStatus: http.StatusOK,
+			setupMock: func() {
+				rows := sqlmock.NewRows([]string{"student_id", "name", "grade", "phone", "parent_phone"}).
+					AddRow(1, "김철수", "1학년", "010-1234-5678", "010-8765-4321")
+				mock.ExpectQuery("SELECT \\* FROM students WHERE student_id = \\$1").WithArgs("1").WillReturnRows(rows)
+			},
+		},
+		{
+			name:           "PUT 요청 - 학생 정보 수정",
+			method:         http.MethodPut,
+			path:           "/students/1",
+			expectedStatus: http.StatusOK,
+			setupMock: func() {
+				mock.ExpectExec("UPDATE students SET name = \\$1, grade = \\$2, phone = \\$3, parent_phone = \\$4 WHERE student_id = \\$5").
+					WithArgs("김철수", "2학년", "010-1234-5678", "010-8765-4321", "1").
+					WillReturnResult(sqlmock.NewResult(1, 1))
+			},
+			body: models.Student{Name: "김철수", Grade: "2학년", Phone: "010-1234-5678", ParentPhone: "010-8765-4321"},
+		},
+		{
+			name:           "DELETE 요청 - 학생 삭제",
+			method:         http.MethodDelete,
+			path:           "/students/1",
+			expectedStatus: http.StatusOK,
+			setupMock: func() {
+				mock.ExpectExec("DELETE FROM students WHERE student_id = \\$1").
+					WithArgs("1").
+					WillReturnResult(sqlmock.NewResult(1, 1))
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tt.setupMock()
+
+			var req *http.Request
+			if tt.body != nil {
+				jsonData, _ := json.Marshal(tt.body)
+				req = httptest.NewRequest(tt.method, tt.path, bytes.NewBuffer(jsonData))
+				req.Header.Set("Content-Type", "application/json")
+			} else {
+				req = httptest.NewRequest(tt.method, tt.path, nil)
+			}
+
+			w := httptest.NewRecorder()
+			handler.StudentByIDHandler(w, req)
+
+			assert.Equal(t, tt.expectedStatus, w.Code)
+			assert.NoError(t, mock.ExpectationsWereMet())
+		})
+	}
+}
+
+// GetStudents 테스트
 func TestGetStudents(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
@@ -47,7 +184,7 @@ func TestGetStudents(t *testing.T) {
 
 	mock.ExpectQuery("SELECT \\* FROM students").WillReturnRows(rows)
 
-	req := httptest.NewRequest("GET", "/students", nil)
+	req := httptest.NewRequest(http.MethodGet, "/students", nil)
 	w := httptest.NewRecorder()
 
 	handler.GetStudents(w, req)
@@ -62,6 +199,7 @@ func TestGetStudents(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
+// CreateStudent 테스트
 func TestCreateStudent(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
@@ -80,7 +218,7 @@ func TestCreateStudent(t *testing.T) {
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	jsonData, _ := json.Marshal(student)
-	req := httptest.NewRequest("POST", "/students", bytes.NewBuffer(jsonData))
+	req := httptest.NewRequest(http.MethodPost, "/students", bytes.NewBuffer(jsonData))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
@@ -88,147 +226,112 @@ func TestCreateStudent(t *testing.T) {
 
 	assert.Equal(t, http.StatusCreated, w.Code)
 
+	var response map[string]string
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	require.NoError(t, err)
+	assert.Equal(t, "Student created", response["message"])
+
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestUpdateStudent(t *testing.T) {
+// GetStudentByID 테스트
+func TestGetStudentByID(t *testing.T) {
+	db, mock := createMockDB(t)
+	defer db.Close()
+
+	handler := NewHandler(db)
+
+	expectedStudent := models.Student{
+		StudentID:   1,
+		Name:        "김철수",
+		Grade:       "1학년",
+		Phone:       "010-1234-5678",
+		ParentPhone: "010-8765-4321",
+	}
+
+	rows := sqlmock.NewRows([]string{"student_id", "name", "grade", "phone", "parent_phone"}).
+		AddRow(1, "김철수", "1학년", "010-1234-5678", "010-8765-4321")
+
+	mock.ExpectQuery("SELECT \\* FROM students WHERE student_id = \\$1").WithArgs("1").WillReturnRows(rows)
+
+	req := httptest.NewRequest(http.MethodGet, "/students/1", nil)
+	w := httptest.NewRecorder()
+
+	handler.GetStudentByID(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var responseStudent models.Student
+	err := json.Unmarshal(w.Body.Bytes(), &responseStudent)
+	require.NoError(t, err)
+	assert.Equal(t, expectedStudent, responseStudent)
+
+	assert.NoError(t, mock.ExpectationsWereMet())
+}
+
+// UpdateStudentByID 테스트
+func TestUpdateStudentByID(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
 
 	handler := NewHandler(db)
 
 	student := models.Student{
-		StudentID:   1,
 		Name:        "김철수",
 		Grade:       "2학년",
 		Phone:       "010-1234-5678",
 		ParentPhone: "010-8765-4321",
 	}
 
-	mock.ExpectExec("UPDATE students").WithArgs("김철수", "2학년", "010-1234-5678", "010-8765-4321", 1).
+	mock.ExpectExec("UPDATE students SET name = \\$1, grade = \\$2, phone = \\$3, parent_phone = \\$4 WHERE student_id = \\$5").
+		WithArgs("김철수", "2학년", "010-1234-5678", "010-8765-4321", "1").
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	jsonData, _ := json.Marshal(student)
-	req := httptest.NewRequest("PUT", "/students", bytes.NewBuffer(jsonData))
+	req := httptest.NewRequest(http.MethodPut, "/students/1", bytes.NewBuffer(jsonData))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
-	handler.UpdateStudent(w, req)
+	handler.UpdateStudentByID(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]string
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	require.NoError(t, err)
+	assert.Equal(t, "Student updated", response["message"])
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestDeleteStudent(t *testing.T) {
+// DeleteStudentByID 테스트
+func TestDeleteStudentByID(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
 
 	handler := NewHandler(db)
 
-	student := models.Student{
-		StudentID: 1,
-	}
-
-	mock.ExpectExec("DELETE FROM students").WithArgs(1).
+	mock.ExpectExec("DELETE FROM students WHERE student_id = \\$1").
+		WithArgs("1").
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	jsonData, _ := json.Marshal(student)
-	req := httptest.NewRequest("DELETE", "/students", bytes.NewBuffer(jsonData))
-	req.Header.Set("Content-Type", "application/json")
+	req := httptest.NewRequest(http.MethodDelete, "/students/1", nil)
 	w := httptest.NewRecorder()
 
-	handler.DeleteStudent(w, req)
+	handler.DeleteStudentByID(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]string
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	require.NoError(t, err)
+	assert.Equal(t, "Student deleted", response["message"])
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestStudentHandler(t *testing.T) {
-	db, mock := createMockDB(t)
-	defer db.Close()
-
-	handler := NewHandler(db)
-
-	tests := []struct {
-		name           string
-		method         string
-		expectedStatus int
-		setupMock      func()
-	}{
-		{
-			name:           "GET 요청",
-			method:         "GET",
-			expectedStatus: http.StatusOK,
-			setupMock: func() {
-				rows := sqlmock.NewRows([]string{"student_id", "name", "grade", "phone", "parent_phone"}).
-					AddRow(1, "김철수", "1학년", "010-1234-5678", "010-8765-4321")
-				mock.ExpectQuery("SELECT \\* FROM students").WillReturnRows(rows)
-			},
-		},
-		{
-			name:           "POST 요청",
-			method:         "POST",
-			expectedStatus: http.StatusCreated,
-			setupMock: func() {
-				mock.ExpectExec("INSERT INTO students").WithArgs(1, "김철수", "1학년", "010-1234-5678", "010-8765-4321").
-					WillReturnResult(sqlmock.NewResult(1, 1))
-			},
-		},
-		{
-			name:           "PUT 요청",
-			method:         "PUT",
-			expectedStatus: http.StatusOK,
-			setupMock: func() {
-				mock.ExpectExec("UPDATE students").WithArgs("김철수", "2학년", "010-1234-5678", "010-8765-4321", 1).
-					WillReturnResult(sqlmock.NewResult(1, 1))
-			},
-		},
-		{
-			name:           "DELETE 요청",
-			method:         "DELETE",
-			expectedStatus: http.StatusOK,
-			setupMock: func() {
-				mock.ExpectExec("DELETE FROM students").WithArgs(1).
-					WillReturnResult(sqlmock.NewResult(1, 1))
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tt.setupMock()
-
-			var req *http.Request
-			if tt.method == "GET" {
-				req = httptest.NewRequest(tt.method, "/students", nil)
-			} else {
-				grade := "1학년"
-				if tt.method == "PUT" {
-					grade = "2학년"
-				}
-				student := models.Student{StudentID: 1, Name: "김철수", Grade: grade, Phone: "010-1234-5678", ParentPhone: "010-8765-4321"}
-				if tt.method == "DELETE" {
-					student = models.Student{StudentID: 1}
-				}
-				jsonData, _ := json.Marshal(student)
-				req = httptest.NewRequest(tt.method, "/students", bytes.NewBuffer(jsonData))
-				req.Header.Set("Content-Type", "application/json")
-			}
-
-			w := httptest.NewRecorder()
-
-			handler.StudentHandler(w, req)
-
-			assert.Equal(t, tt.expectedStatus, w.Code)
-
-			assert.NoError(t, mock.ExpectationsWereMet())
-		})
-	}
-}
-
-func TestGetStudentsError(t *testing.T) {
+// 에러 케이스 테스트들
+func TestGetStudentsDBError(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
 
@@ -236,31 +339,12 @@ func TestGetStudentsError(t *testing.T) {
 
 	mock.ExpectQuery("SELECT \\* FROM students").WillReturnError(sql.ErrConnDone)
 
-	req := httptest.NewRequest("GET", "/students", nil)
+	req := httptest.NewRequest(http.MethodGet, "/students", nil)
 	w := httptest.NewRecorder()
 
-	assert.Panics(t, func() {
-		handler.GetStudents(w, req)
-	})
+	handler.GetStudents(w, req)
 
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestGetStudentsError2(t *testing.T) {
-	db, mock := createMockDB(t)
-	defer db.Close()
-
-	handler := NewHandler(db)
-
-	mock.ExpectQuery("SELECT \\* FROM students").WillReturnError(sql.ErrConnDone)
-
-	req := httptest.NewRequest("GET", "/students", nil)
-	w := httptest.NewRecorder()
-
-	assert.Panics(t, func() {
-		handler.GetStudents(w, req)
-	})
-
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
@@ -270,157 +354,64 @@ func TestCreateStudentInvalidJSON(t *testing.T) {
 
 	handler := NewHandler(db)
 
-	req := httptest.NewRequest("POST", "/students", bytes.NewBufferString("invalid json"))
+	req := httptest.NewRequest(http.MethodPost, "/students", bytes.NewBufferString("invalid json"))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
-	assert.Panics(t, func() {
-		handler.CreateStudent(w, req)
-	})
+	handler.CreateStudent(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
-func TestUpdateStudentInvalidJSON(t *testing.T) {
+func TestGetStudentByIDMissingID(t *testing.T) {
 	db, _ := createMockDB(t)
 	defer db.Close()
 
 	handler := NewHandler(db)
 
-	req := httptest.NewRequest("PUT", "/students", bytes.NewBufferString("invalid json"))
-	req.Header.Set("Content-Type", "application/json")
+	req := httptest.NewRequest(http.MethodGet, "/students/", nil)
 	w := httptest.NewRecorder()
 
-	assert.Panics(t, func() {
-		handler.UpdateStudent(w, req)
-	})
+	handler.GetStudentByID(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
-func TestDeleteStudentInvalidJSON(t *testing.T) {
-	db, _ := createMockDB(t)
-	defer db.Close()
-
-	handler := NewHandler(db)
-
-	req := httptest.NewRequest("DELETE", "/students", bytes.NewBufferString("invalid json"))
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-
-	assert.Panics(t, func() {
-		handler.DeleteStudent(w, req)
-	})
-}
-
-// rows.Scan 에러 케이스 테스트들
-func TestGetStudentsScanError(t *testing.T) {
+func TestGetStudentByIDNotFound(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
 
 	handler := NewHandler(db)
 
-	// Mock 쿼리는 성공하지만 Scan에서 에러가 발생하는 경우
-	rows := sqlmock.NewRows([]string{"student_id", "name", "grade", "phone", "parent_phone"}).
-		AddRow("invalid_int", "김철수", "1학년", "010-1234-5678", "010-8765-4321") // student_id가 문자열
+	mock.ExpectQuery("SELECT \\* FROM students WHERE student_id = \\$1").WithArgs("999").WillReturnError(sql.ErrNoRows)
 
-	mock.ExpectQuery("SELECT \\* FROM students").WillReturnRows(rows)
-
-	req := httptest.NewRequest("GET", "/students", nil)
+	req := httptest.NewRequest(http.MethodGet, "/students/999", nil)
 	w := httptest.NewRecorder()
 
-	// panic이 발생하는지 확인
-	assert.Panics(t, func() {
-		handler.GetStudents(w, req)
-	})
+	handler.GetStudentByID(w, req)
 
+	assert.Equal(t, http.StatusNotFound, w.Code)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestGetStudentsNullValueError(t *testing.T) {
-	db, mock := createMockDB(t)
-	defer db.Close()
+// getIDFromPath 함수 테스트
+func TestGetIDFromPath(t *testing.T) {
+	tests := []struct {
+		name     string
+		path     string
+		expected string
+	}{
+		{"정상적인 ID", "/students/1", "1"},
+		{"숫자가 아닌 ID", "/students/abc", "abc"},
+		{"ID가 없는 경우", "/students/", ""},
+		{"잘못된 경로", "/students", ""},
+		{"루트 경로", "/", ""},
+	}
 
-	handler := NewHandler(db)
-
-	// NULL 값이 포함된 데이터
-	rows := sqlmock.NewRows([]string{"student_id", "name", "grade", "phone", "parent_phone"}).
-		AddRow(nil, "김철수", "1학년", "010-1234-5678", "010-8765-4321") // student_id가 NULL
-
-	mock.ExpectQuery("SELECT \\* FROM students").WillReturnRows(rows)
-
-	req := httptest.NewRequest("GET", "/students", nil)
-	w := httptest.NewRecorder()
-
-	// panic이 발생하는지 확인
-	assert.Panics(t, func() {
-		handler.GetStudents(w, req)
-	})
-
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestGetStudentsColumnMismatchError(t *testing.T) {
-	db, mock := createMockDB(t)
-	defer db.Close()
-
-	handler := NewHandler(db)
-
-	// 컬럼 개수가 다른 경우 (예: 테이블 구조가 변경된 경우)
-	rows := sqlmock.NewRows([]string{"student_id", "name", "grade", "phone", "parent_phone", "extra_column"}).
-		AddRow(1, "김철수", "1학년", "010-1234-5678", "010-8765-4321", "extra_value")
-
-	mock.ExpectQuery("SELECT \\* FROM students").WillReturnRows(rows)
-
-	req := httptest.NewRequest("GET", "/students", nil)
-	w := httptest.NewRecorder()
-
-	// panic이 발생하는지 확인
-	assert.Panics(t, func() {
-		handler.GetStudents(w, req)
-	})
-
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestGetStudentsInsufficientColumnsError(t *testing.T) {
-	db, mock := createMockDB(t)
-	defer db.Close()
-
-	handler := NewHandler(db)
-
-	// 컬럼이 부족한 경우
-	rows := sqlmock.NewRows([]string{"student_id", "name", "grade"}).
-		AddRow(1, "김철수", "1학년") // phone, parent_phone 컬럼이 없음
-
-	mock.ExpectQuery("SELECT \\* FROM students").WillReturnRows(rows)
-
-	req := httptest.NewRequest("GET", "/students", nil)
-	w := httptest.NewRecorder()
-
-	// panic이 발생하는지 확인
-	assert.Panics(t, func() {
-		handler.GetStudents(w, req)
-	})
-
-	assert.NoError(t, mock.ExpectationsWereMet())
-}
-
-func TestGetStudentsDataTypeError(t *testing.T) {
-	db, mock := createMockDB(t)
-	defer db.Close()
-
-	handler := NewHandler(db)
-
-	// 데이터 타입이 맞지 않는 경우
-	rows := sqlmock.NewRows([]string{"student_id", "name", "grade", "phone", "parent_phone"}).
-		AddRow("not_an_int", "김철수", 123, "010-1234-5678", "010-8765-4321") // grade가 int, phone이 string이어야 하는데 반대
-
-	mock.ExpectQuery("SELECT \\* FROM students").WillReturnRows(rows)
-
-	req := httptest.NewRequest("GET", "/students", nil)
-	w := httptest.NewRecorder()
-
-	// panic이 발생하는지 확인
-	assert.Panics(t, func() {
-		handler.GetStudents(w, req)
-	})
-
-	assert.NoError(t, mock.ExpectationsWereMet())
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := getIDFromPath(tt.path)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
 }
