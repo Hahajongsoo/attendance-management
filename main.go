@@ -17,5 +17,6 @@ func main() {
 	defer db.Close()
 	handler := handlers.NewHandler(db)
 	http.HandleFunc("/students", handler.StudentHandler)
+	http.HandleFunc("/students/", handler.StudentByIDHandler)
 	http.ListenAndServe(":8080", nil)
 }
