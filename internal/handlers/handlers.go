@@ -96,11 +96,22 @@ func (h *Handler) CreateStudent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := h.db.Exec("INSERT INTO students (student_id, name, grade, phone, parent_phone) VALUES ($1, $2, $3, $4, $5)",
+	result, err := h.db.Exec("INSERT INTO students (student_id, name, grade, phone, parent_phone) VALUES ($1, $2, $3, $4, $5)",
 		student.StudentID, student.Name, student.Grade, student.Phone, student.ParentPhone)
 	if err != nil {
 		log.Println("학생 등록 실패:", err)
 		http.Error(w, "Failed to create student", http.StatusInternalServerError)
+		return
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		log.Println("학생 등록 실패:", err)
+		http.Error(w, "Failed to create student", http.StatusInternalServerError)
+		return
+	}
+	if affected == 0 {
+		http.Error(w, "Student not found", http.StatusNotFound)
 		return
 	}
 
@@ -120,11 +131,21 @@ func (h *Handler) UpdateStudentByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := h.db.Exec("UPDATE students SET name = $1, grade = $2, phone = $3, parent_phone = $4 WHERE student_id = $5",
+	result, err := h.db.Exec("UPDATE students SET name = $1, grade = $2, phone = $3, parent_phone = $4 WHERE student_id = $5",
 		student.Name, student.Grade, student.Phone, student.ParentPhone, id)
 	if err != nil {
 		log.Println("학생 수정 실패:", err)
 		http.Error(w, "Failed to update student", http.StatusInternalServerError)
+		return
+	}
+	affected, err := result.RowsAffected()
+	if err != nil {
+		log.Println("학생 수정 실패:", err)
+		http.Error(w, "Failed to update student", http.StatusInternalServerError)
+		return
+	}
+	if affected == 0 {
+		http.Error(w, "Student not found", http.StatusNotFound)
 		return
 	}
 
