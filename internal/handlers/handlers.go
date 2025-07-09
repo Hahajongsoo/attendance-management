@@ -270,7 +270,7 @@ func (h *Handler) CreateAttendance(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err := h.db.Exec("INSERT INTO attendance (student_id, date, check_in, check_out, status) VALUES ($1, $2, $3, $4, $5)",
-		studentID, date, attendance.CheckIn, attendance.CheckOut, attendance.Status)
+		studentID, date, attendance.CheckIn.Time, attendance.CheckOut.Time, attendance.Status)
 	if err != nil {
 		log.Println("출결 등록 실패:", err)
 		http.Error(w, "Failed to create attendance", http.StatusInternalServerError)
@@ -300,7 +300,7 @@ func (h *Handler) UpdateAttendance(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, err := h.db.Exec("UPDATE attendance SET check_in = $1, check_out = $2, status = $3 WHERE student_id = $4 AND date = $5",
-		attendance.CheckIn, attendance.CheckOut, attendance.Status, studentID, date)
+		attendance.CheckIn.Time, attendance.CheckOut.Time, attendance.Status, studentID, date)
 	if err != nil {
 		log.Println("출결 수정 실패:", err)
 		http.Error(w, "Failed to update attendance", http.StatusInternalServerError)
