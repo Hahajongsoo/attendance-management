@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"attendance-management/internal/models"
@@ -269,6 +270,15 @@ func (h *Handler) CreateAttendance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if studentID != strconv.Itoa(attendance.StudentID) {
+		http.Error(w, "Student ID mismatch", http.StatusBadRequest)
+		return
+	}
+	if date != attendance.Date.Time.Format("2006-01-02") {
+		http.Error(w, "Date mismatch", http.StatusBadRequest)
+		return
+	}
+
 	_, err := h.db.Exec("INSERT INTO attendance (student_id, date, check_in, check_out, status) VALUES ($1, $2, $3, $4, $5)",
 		studentID, date, attendance.CheckIn.Time, attendance.CheckOut.Time, attendance.Status)
 	if err != nil {
@@ -296,6 +306,14 @@ func (h *Handler) UpdateAttendance(w http.ResponseWriter, r *http.Request) {
 	var attendance models.Attendance
 	if err := json.NewDecoder(r.Body).Decode(&attendance); err != nil {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+	if studentID != strconv.Itoa(attendance.StudentID) {
+		http.Error(w, "Student ID mismatch", http.StatusBadRequest)
+		return
+	}
+	if date != attendance.Date.Time.Format("2006-01-02") {
+		http.Error(w, "Date mismatch", http.StatusBadRequest)
 		return
 	}
 
