@@ -431,7 +431,7 @@ func (h *Handler) GetTeachers(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	var teachers []models.Teacher
+	var teachers []models.TeacherResponse
 	for rows.Next() {
 		var teacher models.Teacher
 		if err := rows.Scan(&teacher.TeacherID, &teacher.Name, &teacher.Phone); err != nil {
@@ -439,7 +439,7 @@ func (h *Handler) GetTeachers(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
-		teachers = append(teachers, teacher)
+		teachers = append(teachers, teacher.ToResponse())
 	}
 	writeJSON(w, http.StatusOK, teachers)
 }
@@ -486,7 +486,7 @@ func (h *Handler) GetTeacherByID(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	writeJSON(w, http.StatusOK, teacher)
+	writeJSON(w, http.StatusOK, teacher.ToResponse())
 }
 
 func (h *Handler) UpdateTeacherByID(w http.ResponseWriter, r *http.Request) {
