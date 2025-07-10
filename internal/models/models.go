@@ -22,6 +22,19 @@ type Attendance struct {
 	Status    string   `json:"status"`
 }
 
+type Teacher struct {
+	TeacherID string `json:"teacher_id"`
+	Password  string `json:"password"`
+	Name      string `json:"name"`
+	Phone     string `json:"phone"`
+}
+
+type TeacherResponse struct {
+	TeacherID string `json:"teacher_id"`
+	Name      string `json:"name"`
+	Phone     string `json:"phone"`
+}
+
 type TimeOnly struct {
 	time.Time
 }
@@ -56,4 +69,12 @@ func (d *DateOnly) UnmarshalJSON(b []byte) error {
 
 func (d DateOnly) MarshalJSON() ([]byte, error) {
 	return fmt.Appendf(nil, "\"%s\"", d.Format("2006-01-02")), nil
+}
+
+func (t Teacher) ToResponse() TeacherResponse {
+	return TeacherResponse{
+		TeacherID: t.TeacherID,
+		Name:      t.Name,
+		Phone:     t.Phone,
+	}
 }
