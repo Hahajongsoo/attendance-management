@@ -353,10 +353,7 @@ func (h *Handler) DeleteAttendance(w http.ResponseWriter, r *http.Request) {
 
 func getDateFromPath(path string) string {
 	parts := strings.Split(strings.Trim(path, "/"), "/")
-	if len(parts) < 4 {
-		return ""
-	}
-	return parts[3]
+	return parts[len(parts)-1]
 }
 
 func (h *Handler) AttendanceByDateHandler(w http.ResponseWriter, r *http.Request) {
