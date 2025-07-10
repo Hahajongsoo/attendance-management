@@ -376,13 +376,13 @@ func (h *Handler) AttendanceByDateHandler(w http.ResponseWriter, r *http.Request
 
 	var attendances []models.Attendance
 	for rows.Next() {
-		var a models.Attendance
-		if err := rows.Scan(&a.StudentID, &a.Date, &a.CheckIn, &a.CheckOut, &a.Status); err != nil {
+		var attendance models.Attendance
+		if err := rows.Scan(&attendance.StudentID, &attendance.Date.Time, &attendance.CheckIn.Time, &attendance.CheckOut.Time, &attendance.Status); err != nil {
 			log.Println("rows.Scan 오류:", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
-		attendances = append(attendances, a)
+		attendances = append(attendances, attendance)
 	}
 	writeJSON(w, http.StatusOK, attendances)
 }
