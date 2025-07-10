@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"attendance-management/internal/models"
@@ -236,7 +237,7 @@ func (h *Handler) GetAttendance(w http.ResponseWriter, r *http.Request) {
 
 	row := h.db.QueryRow("SELECT * FROM attendance WHERE student_id = $1 AND date = $2", studentID, date)
 	var attendance models.Attendance
-	err := row.Scan(&attendance.StudentID, &attendance.Date, &attendance.CheckIn, &attendance.CheckOut, &attendance.Status)
+	err := row.Scan(&attendance.StudentID, &attendance.Date.Time, &attendance.CheckIn.Time, &attendance.CheckOut.Time, &attendance.Status)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			http.Error(w, "Attendance not found", http.StatusNotFound)
@@ -269,8 +270,17 @@ func (h *Handler) CreateAttendance(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if studentID != strconv.Itoa(attendance.StudentID) {
+		http.Error(w, "Student ID mismatch", http.StatusBadRequest)
+		return
+	}
+	if date != attendance.Date.Time.Format("2006-01-02") {
+		http.Error(w, "Date mismatch", http.StatusBadRequest)
+		return
+	}
+
 	_, err := h.db.Exec("INSERT INTO attendance (student_id, date, check_in, check_out, status) VALUES ($1, $2, $3, $4, $5)",
-		studentID, date, attendance.CheckIn, attendance.CheckOut, attendance.Status)
+		studentID, date, attendance.CheckIn.Time, attendance.CheckOut.Time, attendance.Status)
 	if err != nil {
 		log.Println("출결 등록 실패:", err)
 		http.Error(w, "Failed to create attendance", http.StatusInternalServerError)
@@ -298,9 +308,17 @@ func (h *Handler) UpdateAttendance(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Invalid JSON", http.StatusBadRequest)
 		return
 	}
+	if studentID != strconv.Itoa(attendance.StudentID) {
+		http.Error(w, "Student ID mismatch", http.StatusBadRequest)
+		return
+	}
+	if date != attendance.Date.Time.Format("2006-01-02") {
+		http.Error(w, "Date mismatch", http.StatusBadRequest)
+		return
+	}
 
 	_, err := h.db.Exec("UPDATE attendance SET check_in = $1, check_out = $2, status = $3 WHERE student_id = $4 AND date = $5",
-		attendance.CheckIn, attendance.CheckOut, attendance.Status, studentID, date)
+		attendance.CheckIn.Time, attendance.CheckOut.Time, attendance.Status, studentID, date)
 	if err != nil {
 		log.Println("출결 수정 실패:", err)
 		http.Error(w, "Failed to update attendance", http.StatusInternalServerError)
@@ -335,10 +353,7 @@ func (h *Handler) DeleteAttendance(w http.ResponseWriter, r *http.Request) {
 
 func getDateFromPath(path string) string {
 	parts := strings.Split(strings.Trim(path, "/"), "/")
-	if len(parts) < 4 {
-		return ""
-	}
-	return parts[3]
+	return parts[len(parts)-1]
 }
 
 func (h *Handler) AttendanceByDateHandler(w http.ResponseWriter, r *http.Request) {
@@ -358,13 +373,13 @@ func (h *Handler) AttendanceByDateHandler(w http.ResponseWriter, r *http.Request
 
 	var attendances []models.Attendance
 	for rows.Next() {
-		var a models.Attendance
-		if err := rows.Scan(&a.StudentID, &a.Date, &a.CheckIn, &a.CheckOut, &a.Status); err != nil {
+		var attendance models.Attendance
+		if err := rows.Scan(&attendance.StudentID, &attendance.Date.Time, &attendance.CheckIn.Time, &attendance.CheckOut.Time, &attendance.Status); err != nil {
 			log.Println("rows.Scan 오류:", err)
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 			return
 		}
-		attendances = append(attendances, a)
+		attendances = append(attendances, attendance)
 	}
 	writeJSON(w, http.StatusOK, attendances)
 }
