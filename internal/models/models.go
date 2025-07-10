@@ -35,6 +35,16 @@ type TeacherResponse struct {
 	Phone     string `json:"phone"`
 }
 
+type Class struct {
+	ClassID   int      `json:"class_id"`
+	ClassName string   `json:"class_name"`
+	Days      string   `json:"days"`
+	StartTime TimeOnly `json:"start_time"`
+	EndTime   TimeOnly `json:"end_time"`
+	Price     int      `json:"price"`
+	TeacherID string   `json:"teacher_id"`
+}
+
 type TimeOnly struct {
 	time.Time
 }
