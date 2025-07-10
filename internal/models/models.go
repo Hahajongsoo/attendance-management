@@ -22,6 +22,13 @@ type Attendance struct {
 	Status    string   `json:"status"`
 }
 
+type Teacher struct {
+	TeacherID string `json:"teacher_id"`
+	Password  string `json:"password"`
+	Name      string `json:"name"`
+	Phone     string `json:"phone"`
+}
+
 type TimeOnly struct {
 	time.Time
 }
