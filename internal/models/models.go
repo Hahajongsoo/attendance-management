@@ -45,6 +45,13 @@ type Class struct {
 	TeacherID string   `json:"teacher_id"`
 }
 
+type Enrollment struct {
+	EnrollmentID int      `json:"enrollment_id"`
+	StudentID    int      `json:"student_id"`
+	ClassID      int      `json:"class_id"`
+	EnrolledDate DateOnly `json:"enrolled_date"`
+}
+
 type TimeOnly struct {
 	time.Time
 }
