@@ -52,6 +52,15 @@ type Enrollment struct {
 	EnrolledDate DateOnly `json:"enrolled_date"`
 }
 
+type Payment struct {
+	PaymentID    int      `json:"payment_id"`
+	StudentID    int      `json:"student_id"`
+	ClassID      int      `json:"class_id"`
+	PaymentDate  DateOnly `json:"payment_date"`
+	Amount       int      `json:"amount"`
+	EnrollmentID int      `json:"enrollment_id"`
+}
+
 type TimeOnly struct {
 	time.Time
 }
