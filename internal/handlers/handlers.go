@@ -8,22 +8,23 @@ import (
 )
 
 type Handler struct {
-	db *sql.DB
+	db             *sql.DB
+	studentHandler *StudentHandler
 }
 
-func NewHandler(db *sql.DB) *Handler {
-	return &Handler{db: db}
+func NewHandler(db *sql.DB, studentHandler *StudentHandler) *Handler {
+	return &Handler{db: db, studentHandler: studentHandler}
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 	switch {
 	case path == "/students":
-		h.StudentHandler(w, r)
+		h.studentHandler.StudentHandler(w, r)
 	case strings.HasPrefix(path, "/students/"):
 		segments := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 		if len(segments) == 2 {
-			h.StudentByIDHandler(w, r)
+			h.studentHandler.StudentByIDHandler(w, r)
 			return
 		}
 
