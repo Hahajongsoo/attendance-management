@@ -8,32 +8,44 @@ import (
 )
 
 type Handler struct {
-	db *sql.DB
+	db                *sql.DB
+	enrollmentHandler *EnrollmentHandler
+	studentHandler    *StudentHandler
+	attendanceHandler *AttendanceHandler
+	classHandler      *ClassHandler
+	teacherHandler    *TeacherHandler
 }
 
-func NewHandler(db *sql.DB) *Handler {
-	return &Handler{db: db}
+func NewHandler(db *sql.DB, enrollmentHandler *EnrollmentHandler, studentHandler *StudentHandler, attendanceHandler *AttendanceHandler, classHandler *ClassHandler, teacherHandler *TeacherHandler) *Handler {
+	return &Handler{
+		db:                db,
+		enrollmentHandler: enrollmentHandler,
+		studentHandler:    studentHandler,
+		attendanceHandler: attendanceHandler,
+		classHandler:      classHandler,
+		teacherHandler:    teacherHandler,
+	}
 }
 
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 	switch {
 	case path == "/students":
-		h.StudentHandler(w, r)
+		h.studentHandler.StudentHandler(w, r)
 	case strings.HasPrefix(path, "/students/"):
 		segments := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 		if len(segments) == 2 {
-			h.StudentByIDHandler(w, r)
+			h.studentHandler.StudentByIDHandler(w, r)
 			return
 		}
 
 		if len(segments) >= 3 {
 			switch segments[2] {
 			case "attendance":
-				h.AttendanceHandler(w, r)
+				h.attendanceHandler.AttendanceHandler(w, r)
 				return
 			case "enrollments":
-				h.EnrollmentByStudentIDHandler(w, r)
+				h.enrollmentHandler.EnrollmentByStudentIDHandler(w, r)
 				return
 			}
 		}
@@ -41,46 +53,46 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Not Found", http.StatusNotFound)
 		return
 	case strings.HasPrefix(path, "/attendance/"):
-		h.AttendanceByDateHandler(w, r)
+		h.attendanceHandler.AttendanceByDateHandler(w, r)
 		return
 	case path == "/teachers":
-		h.TeacherHandler(w, r)
+		h.teacherHandler.TeacherHandler(w, r)
 		return
 	case strings.HasPrefix(path, "/teachers/"):
 		segments := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 		if len(segments) == 2 {
-			h.TeacherByIDHandler(w, r)
+			h.teacherHandler.TeacherByIDHandler(w, r)
 			return
 
 		}
 		if len(segments) >= 3 && segments[2] == "classes" {
-			h.ClassByTeacherIDHandler(w, r)
+			h.classHandler.ClassByTeacherIDHandler(w, r)
 			return
 		}
 		http.Error(w, "Not Found", http.StatusNotFound)
 		return
 	case path == "/classes":
-		h.ClassHandler(w, r)
+		h.classHandler.ClassHandler(w, r)
 		return
 	case strings.HasPrefix(path, "/classes/"):
 		segments := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 		if len(segments) == 2 {
-			h.ClassByIDHandler(w, r)
+			h.classHandler.ClassByIDHandler(w, r)
 			return
 		}
 		if len(segments) >= 3 && segments[2] == "enrollments" {
-			h.EnrollmentByClassIDHandler(w, r)
+			h.enrollmentHandler.EnrollmentByClassIDHandler(w, r)
 			return
 		}
 		http.Error(w, "Not Found", http.StatusNotFound)
 		return
 	case path == "/enrollments":
-		h.EnrollmentHandler(w, r)
+		h.enrollmentHandler.EnrollmentHandler(w, r)
 		return
 	case strings.HasPrefix(path, "/enrollments/"):
 		segments := strings.Split(strings.Trim(r.URL.Path, "/"), "/")
 		if len(segments) == 2 {
-			h.EnrollmentByIDHandler(w, r)
+			h.enrollmentHandler.EnrollmentByIDHandler(w, r)
 			return
 		}
 		http.Error(w, "Not Found", http.StatusNotFound)

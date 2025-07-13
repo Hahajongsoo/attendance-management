@@ -25,7 +25,7 @@ func TestNewHandler(t *testing.T) {
 	db, _ := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 	assert.NotNil(t, handler)
 	assert.Equal(t, db, handler.db)
 }
@@ -35,7 +35,7 @@ func TestStudentHandler(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 
 	tests := []struct {
 		name           string
@@ -85,7 +85,7 @@ func TestStudentHandler(t *testing.T) {
 			}
 
 			w := httptest.NewRecorder()
-			handler.StudentHandler(w, req)
+			handler.studentHandler.StudentHandler(w, req)
 
 			assert.Equal(t, tt.expectedStatus, w.Code)
 			assert.NoError(t, mock.ExpectationsWereMet())
@@ -98,7 +98,7 @@ func TestStudentByIDHandler(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 
 	tests := []struct {
 		name           string
@@ -158,7 +158,7 @@ func TestStudentByIDHandler(t *testing.T) {
 			}
 
 			w := httptest.NewRecorder()
-			handler.StudentByIDHandler(w, req)
+			handler.studentHandler.StudentByIDHandler(w, req)
 
 			assert.Equal(t, tt.expectedStatus, w.Code)
 			assert.NoError(t, mock.ExpectationsWereMet())
@@ -167,11 +167,11 @@ func TestStudentByIDHandler(t *testing.T) {
 }
 
 // GetStudents 테스트
-func TestGetStudents(t *testing.T) {
+func TestStudentRepository_GetAll(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 
 	expectedStudents := []models.Student{
 		{StudentID: 1, Name: "김철수", Grade: "1학년", Phone: "010-1234-5678", ParentPhone: "010-8765-4321"},
@@ -187,7 +187,7 @@ func TestGetStudents(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/students", nil)
 	w := httptest.NewRecorder()
 
-	handler.GetStudents(w, req)
+	handler.studentHandler.GetStudents(w, req)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
@@ -204,7 +204,7 @@ func TestCreateStudent(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 
 	student := models.Student{
 		StudentID:   3,
@@ -222,7 +222,7 @@ func TestCreateStudent(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
-	handler.CreateStudent(w, req)
+	handler.studentHandler.CreateStudent(w, req)
 
 	assert.Equal(t, http.StatusCreated, w.Code)
 
@@ -239,7 +239,7 @@ func TestGetStudentByID(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 
 	expectedStudent := models.Student{
 		StudentID:   1,
@@ -257,7 +257,7 @@ func TestGetStudentByID(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/students/1", nil)
 	w := httptest.NewRecorder()
 
-	handler.GetStudentByID(w, req)
+	handler.studentHandler.GetStudentByID(w, req, "1")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
@@ -274,7 +274,7 @@ func TestUpdateStudentByID(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 
 	student := models.Student{
 		Name:        "김철수",
@@ -292,7 +292,7 @@ func TestUpdateStudentByID(t *testing.T) {
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
-	handler.UpdateStudentByID(w, req)
+	handler.studentHandler.UpdateStudentByID(w, req, "1")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
@@ -309,7 +309,7 @@ func TestDeleteStudentByID(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 
 	mock.ExpectExec("DELETE FROM students WHERE student_id = \\$1").
 		WithArgs("1").
@@ -318,7 +318,7 @@ func TestDeleteStudentByID(t *testing.T) {
 	req := httptest.NewRequest(http.MethodDelete, "/students/1", nil)
 	w := httptest.NewRecorder()
 
-	handler.DeleteStudentByID(w, req)
+	handler.studentHandler.DeleteStudentByID(w, req, "1")
 
 	assert.Equal(t, http.StatusOK, w.Code)
 
@@ -335,14 +335,14 @@ func TestGetStudentsDBError(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 
 	mock.ExpectQuery("SELECT \\* FROM students").WillReturnError(sql.ErrConnDone)
 
 	req := httptest.NewRequest(http.MethodGet, "/students", nil)
 	w := httptest.NewRecorder()
 
-	handler.GetStudents(w, req)
+	handler.studentHandler.GetStudents(w, req)
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 	assert.NoError(t, mock.ExpectationsWereMet())
@@ -352,13 +352,13 @@ func TestCreateStudentInvalidJSON(t *testing.T) {
 	db, _ := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/students", bytes.NewBufferString("invalid json"))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 
-	handler.CreateStudent(w, req)
+	handler.studentHandler.CreateStudent(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
@@ -367,12 +367,12 @@ func TestGetStudentByIDMissingID(t *testing.T) {
 	db, _ := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/students/", nil)
 	w := httptest.NewRecorder()
 
-	handler.GetStudentByID(w, req)
+	handler.studentHandler.GetStudentByID(w, req, "999")
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
@@ -381,14 +381,14 @@ func TestGetStudentByIDNotFound(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 
 	mock.ExpectQuery("SELECT \\* FROM students WHERE student_id = \\$1").WithArgs("999").WillReturnError(sql.ErrNoRows)
 
 	req := httptest.NewRequest(http.MethodGet, "/students/999", nil)
 	w := httptest.NewRecorder()
 
-	handler.GetStudentByID(w, req)
+	handler.studentHandler.GetStudentByID(w, req, "999")
 
 	assert.Equal(t, http.StatusNotFound, w.Code)
 	assert.NoError(t, mock.ExpectationsWereMet())
