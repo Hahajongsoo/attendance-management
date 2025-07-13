@@ -18,9 +18,24 @@ func main() {
 	}
 	defer db.Close()
 	studentRepo := repositories.NewStudentRepository(db)
+	teacherRepo := repositories.NewTeacherRepository(db)
+	enrollmentRepo := repositories.NewEnrollmentRepository(db)
+	classRepo := repositories.NewClassRepository(db)
+	attendanceRepo := repositories.NewAttendanceRepository(db)
+
 	studentService := services.NewStudentService(studentRepo)
+	teacherService := services.NewTeacherService(teacherRepo)
+	enrollmentService := services.NewEnrollmentService(enrollmentRepo)
+	classService := services.NewClassService(classRepo)
+	attendanceService := services.NewAttendanceService(attendanceRepo)
+
 	studentHandler := handlers.NewStudentHandler(studentService)
-	handler := handlers.NewHandler(db, studentHandler)
+	teacherHandler := handlers.NewTeacherHandler(teacherService)
+	enrollmentHandler := handlers.NewEnrollmentHandler(enrollmentService)
+	attendanceHandler := handlers.NewAttendanceHandler(attendanceService)
+	classHandler := handlers.NewClassHandler(classService)
+
+	handler := handlers.NewHandler(db, enrollmentHandler, studentHandler, attendanceHandler, classHandler, teacherHandler)
 
 	http.ListenAndServe(":8080", handler)
 }

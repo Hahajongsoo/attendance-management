@@ -25,7 +25,7 @@ func TestNewHandler(t *testing.T) {
 	db, _ := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db, nil)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 	assert.NotNil(t, handler)
 	assert.Equal(t, db, handler.db)
 }
@@ -35,7 +35,7 @@ func TestStudentHandler(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db, nil)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 
 	tests := []struct {
 		name           string
@@ -98,7 +98,7 @@ func TestStudentByIDHandler(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db, nil)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 
 	tests := []struct {
 		name           string
@@ -171,7 +171,7 @@ func TestStudentRepository_GetAll(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db, nil)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 
 	expectedStudents := []models.Student{
 		{StudentID: 1, Name: "김철수", Grade: "1학년", Phone: "010-1234-5678", ParentPhone: "010-8765-4321"},
@@ -204,7 +204,7 @@ func TestCreateStudent(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db, nil)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 
 	student := models.Student{
 		StudentID:   3,
@@ -239,7 +239,7 @@ func TestGetStudentByID(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db, nil)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 
 	expectedStudent := models.Student{
 		StudentID:   1,
@@ -274,7 +274,7 @@ func TestUpdateStudentByID(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db, nil)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 
 	student := models.Student{
 		Name:        "김철수",
@@ -309,7 +309,7 @@ func TestDeleteStudentByID(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db, nil)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 
 	mock.ExpectExec("DELETE FROM students WHERE student_id = \\$1").
 		WithArgs("1").
@@ -335,7 +335,7 @@ func TestGetStudentsDBError(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db, nil)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 
 	mock.ExpectQuery("SELECT \\* FROM students").WillReturnError(sql.ErrConnDone)
 
@@ -352,7 +352,7 @@ func TestCreateStudentInvalidJSON(t *testing.T) {
 	db, _ := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db, nil)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 
 	req := httptest.NewRequest(http.MethodPost, "/students", bytes.NewBufferString("invalid json"))
 	req.Header.Set("Content-Type", "application/json")
@@ -367,7 +367,7 @@ func TestGetStudentByIDMissingID(t *testing.T) {
 	db, _ := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db, nil)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 
 	req := httptest.NewRequest(http.MethodGet, "/students/", nil)
 	w := httptest.NewRecorder()
@@ -381,7 +381,7 @@ func TestGetStudentByIDNotFound(t *testing.T) {
 	db, mock := createMockDB(t)
 	defer db.Close()
 
-	handler := NewHandler(db, nil)
+	handler := NewHandler(db, nil, nil, nil, nil, nil)
 
 	mock.ExpectQuery("SELECT \\* FROM students WHERE student_id = \\$1").WithArgs("999").WillReturnError(sql.ErrNoRows)
 
