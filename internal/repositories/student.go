@@ -50,9 +50,11 @@ func (r *studentRepository) GetByID(id string) (*models.Student, error) {
 }
 
 func (r *studentRepository) Create(student *models.Student) error {
-	_, err := r.DB.Exec(`
+	query := `
 		INSERT INTO students (student_id, name, grade, phone, parent_phone)
-		VALUES ($1, $2, $3, $4, $5)`,
+		VALUES ($1, $2, $3, $4, $5)
+	`
+	_, err := r.DB.Exec(query,
 		student.StudentID, student.Name, student.Grade, student.Phone, student.ParentPhone,
 	)
 	return err
