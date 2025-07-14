@@ -48,7 +48,11 @@ func (s *AttendanceService) CreateAttendance(attendance *models.Attendance) erro
 		return s.attendanceRepo.Create(attendance)
 	} else {
 		if existingAttendance.CheckOut.Time.Format("15:04") == "00:00" {
-			existingAttendance.CheckOut = attendance.CheckIn
+			if existingAttendance.CheckIn.Time.After(attendance.CheckIn.Time) {
+				return fmt.Errorf("하원 시간은 등원 시간보다 늦어야 합니다")
+			} else {
+				existingAttendance.CheckOut = attendance.CheckIn
+			}
 			_, err := s.attendanceRepo.Update(strStudentID, attendance.Date.Time.Format("2006-01-02"), existingAttendance)
 			return err
 		} else {

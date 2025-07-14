@@ -126,6 +126,24 @@ func TestAttendanceService_CreateAttendance(t *testing.T) {
 			},
 		},
 		{
+			name: "등원 기록 o 하원 시간이 더 빠른 경우",
+			args: args{
+				studentID: "1",
+				now:       time.Date(2025, 7, 14, 10, 0, 0, 0, time.Local),
+				classTime: nil,
+				existing: &models.Attendance{
+					StudentID: 1,
+					Date:      models.DateOnly{Time: time.Date(2025, 7, 14, 10, 0, 0, 0, time.Local)},
+					CheckIn:   models.TimeOnly{Time: time.Date(2025, 7, 14, 11, 0, 0, 0, time.Local)},
+				},
+			},
+			wantError: true,
+			setupMocks: func(f fields, a args) {
+				f.attendanceRepo.On("GetByStudentIDAndDate", a.studentID, "2025-07-14").
+					Return(a.existing, nil)
+			},
+		},
+		{
 			name: "하원기록 o",
 			args: args{
 				studentID: "1",
