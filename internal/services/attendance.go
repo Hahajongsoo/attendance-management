@@ -4,6 +4,8 @@ import (
 	"attendance-management/internal/models"
 	"attendance-management/internal/repositories"
 	"database/sql"
+	"fmt"
+	"strconv"
 	"time"
 )
 
@@ -25,24 +27,43 @@ func (s *AttendanceService) GetAttendanceByDate(date string) ([]models.Attendanc
 }
 
 func (s *AttendanceService) CreateAttendance(attendance *models.Attendance) error {
-	today := time.Now().In(time.Local).Weekday()
-	Weekday := convertWeekdayToKorean(today)
-	classes, err := s.classRepo.GetClassesForStudentByWeekday(attendance.StudentID, Weekday)
-	if err != nil {
+	strStudentID := strconv.Itoa(attendance.StudentID)
+
+	existingAttendance, err := s.attendanceRepo.GetByStudentIDAndDate(strStudentID, attendance.Date.Time.Format("2006-01-02"))
+	if err != nil && err != sql.ErrNoRows {
 		return err
 	}
-	// 해당 요일에 수업이 없으면 일단 출석으로 처리
-	if len(classes) == 0 {
-		attendance.Status = "출석"
+	if existingAttendance == nil {
+		today := time.Now().In(time.Local).Weekday()
+		Weekday := convertWeekdayToKorean(today)
+		classes, err := s.classRepo.GetClassesForStudentByWeekday(strStudentID, Weekday)
+		if err != nil {
+			return err
+		}
+		if len(classes) == 0 {
+			attendance.Status = "출석"
+		} else {
+			attendance.Status = determineAttendanceStatus(attendance.CheckIn.Time, classes[0].StartTime.Time)
+		}
 		return s.attendanceRepo.Create(attendance)
-	}
-
-	if attendance.CheckIn.Time.Format("15:04") > classes[0].StartTime.Time.Format("15:04") {
-		attendance.Status = "지각"
 	} else {
-		attendance.Status = "출석"
+		if existingAttendance.CheckOut.Time.Format("15:04") == "00:00" {
+			existingAttendance.CheckOut = attendance.CheckIn
+			_, err := s.attendanceRepo.Update(strStudentID, attendance.Date.Time.Format("2006-01-02"), existingAttendance)
+			return err
+		} else {
+			return fmt.Errorf("출석 기록이 이미 존재합니다")
+		}
 	}
-	return s.attendanceRepo.Create(attendance)
+}
+
+func determineAttendanceStatus(checkInTime time.Time, classStartTime time.Time) string {
+	checkInTime = time.Date(0, 0, 0, checkInTime.Hour(), checkInTime.Minute(), 0, 0, time.Local)
+	classStartTime = time.Date(0, 0, 0, classStartTime.Hour(), classStartTime.Minute(), 0, 0, time.Local)
+	if checkInTime.After(classStartTime) {
+		return "지각"
+	}
+	return "출석"
 }
 
 func (s *AttendanceService) UpdateAttendance(studentID string, date string, attendance *models.Attendance) error {
