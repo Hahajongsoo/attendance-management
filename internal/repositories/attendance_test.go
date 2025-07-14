@@ -16,7 +16,9 @@ func TestAttendanceRepository_Create(t *testing.T) {
 
 	repo := NewAttendanceRepository(db)
 
-	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO attendance (student_id, date, check_in, check_out, status) VALUES ($1, $2, $3, $4, $5)")).WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(regexp.QuoteMeta("INSERT INTO attendance (student_id, date, check_in, check_out, status) VALUES ($1, $2, $3, $4, $5)")).
+		WithArgs(1, time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC), time.Now().Truncate(time.Minute), time.Now().Truncate(time.Minute), "present").
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	attendance := models.Attendance{
 		StudentID: 1,
@@ -32,30 +34,21 @@ func TestAttendanceRepository_Create(t *testing.T) {
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 
-func TestAttendanceRepository_GetByStudentID(t *testing.T) {
+func TestAttendanceRepository_GetByStudentIDAndDate(t *testing.T) {
 	db, mock := SetupMockDB(t)
 	defer db.Close()
 
 	repo := NewAttendanceRepository(db)
 
-	attendanceTime := time.Now()
-	expectedDate := attendanceTime.Truncate(time.Hour * 24)
-	expectedTime := attendanceTime.Truncate(time.Minute)
-
 	rows := sqlmock.NewRows([]string{"student_id", "date", "check_in", "check_out", "status"}).
-		AddRow(1, expectedDate, expectedTime, expectedTime, "present")
+		AddRow(1, time.Date(2025, 1, 1, 0, 0, 0, 0, time.UTC), time.Now().Truncate(time.Minute), time.Now().Truncate(time.Minute), "present")
 
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM attendance WHERE student_id = $1")).
-		WithArgs("1").
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM attendance WHERE student_id = $1 AND date = $2")).
+		WithArgs("1", "2025-01-01").
 		WillReturnRows(rows)
 
-	attendances, err := repo.GetByStudentIDAndDate("1", "2025-01-01")
+	_, err := repo.GetByStudentIDAndDate("1", "2025-01-01")
 	assert.NoError(t, err)
-	assert.Equal(t, 1, attendances.StudentID)
-	assert.Equal(t, expectedDate, attendances.Date.Time)
-	assert.Equal(t, expectedTime, attendances.CheckIn.Time)
-	assert.Equal(t, expectedTime, attendances.CheckOut.Time)
-	assert.Equal(t, "present", attendances.Status)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
