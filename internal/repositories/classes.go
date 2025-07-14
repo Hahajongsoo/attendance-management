@@ -12,7 +12,7 @@ type ClassRepository interface {
 	GetByTeacherID(teacherID string) ([]models.Class, error)
 	Update(classID string, class *models.Class) (int64, error)
 	Delete(classID string) (int64, error)
-	GetClassesForStudentByWeekday(studentID int, weekday string) ([]models.Class, error)
+	GetClassesForStudentByWeekday(studentID string, weekday string) ([]models.Class, error)
 }
 
 type classRepository struct {
@@ -103,7 +103,7 @@ func (r *classRepository) Delete(classID string) (int64, error) {
 	return result.RowsAffected()
 }
 
-func (r *classRepository) GetClassesForStudentByWeekday(studentID int, weekday string) ([]models.Class, error) {
+func (r *classRepository) GetClassesForStudentByWeekday(studentID string, weekday string) ([]models.Class, error) {
 	query := `
 		SELECT c.* FROM classes c
 		JOIN enrollments e ON c.class_id = e.class_id

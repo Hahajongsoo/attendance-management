@@ -297,7 +297,7 @@ func (_c *ClassRepository_GetByTeacherID_Call) RunAndReturn(run func(string) ([]
 }
 
 // GetClassesForStudentByWeekday provides a mock function with given fields: studentID, weekday
-func (_m *ClassRepository) GetClassesForStudentByWeekday(studentID int, weekday string) ([]models.Class, error) {
+func (_m *ClassRepository) GetClassesForStudentByWeekday(studentID string, weekday string) ([]models.Class, error) {
 	ret := _m.Called(studentID, weekday)
 
 	if len(ret) == 0 {
@@ -306,10 +306,10 @@ func (_m *ClassRepository) GetClassesForStudentByWeekday(studentID int, weekday 
 
 	var r0 []models.Class
 	var r1 error
-	if rf, ok := ret.Get(0).(func(int, string) ([]models.Class, error)); ok {
+	if rf, ok := ret.Get(0).(func(string, string) ([]models.Class, error)); ok {
 		return rf(studentID, weekday)
 	}
-	if rf, ok := ret.Get(0).(func(int, string) []models.Class); ok {
+	if rf, ok := ret.Get(0).(func(string, string) []models.Class); ok {
 		r0 = rf(studentID, weekday)
 	} else {
 		if ret.Get(0) != nil {
@@ -317,7 +317,7 @@ func (_m *ClassRepository) GetClassesForStudentByWeekday(studentID int, weekday 
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(int, string) error); ok {
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
 		r1 = rf(studentID, weekday)
 	} else {
 		r1 = ret.Error(1)
@@ -332,15 +332,15 @@ type ClassRepository_GetClassesForStudentByWeekday_Call struct {
 }
 
 // GetClassesForStudentByWeekday is a helper method to define mock.On call
-//   - studentID int
+//   - studentID string
 //   - weekday string
 func (_e *ClassRepository_Expecter) GetClassesForStudentByWeekday(studentID interface{}, weekday interface{}) *ClassRepository_GetClassesForStudentByWeekday_Call {
 	return &ClassRepository_GetClassesForStudentByWeekday_Call{Call: _e.mock.On("GetClassesForStudentByWeekday", studentID, weekday)}
 }
 
-func (_c *ClassRepository_GetClassesForStudentByWeekday_Call) Run(run func(studentID int, weekday string)) *ClassRepository_GetClassesForStudentByWeekday_Call {
+func (_c *ClassRepository_GetClassesForStudentByWeekday_Call) Run(run func(studentID string, weekday string)) *ClassRepository_GetClassesForStudentByWeekday_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(int), args[1].(string))
+		run(args[0].(string), args[1].(string))
 	})
 	return _c
 }
@@ -350,7 +350,7 @@ func (_c *ClassRepository_GetClassesForStudentByWeekday_Call) Return(_a0 []model
 	return _c
 }
 
-func (_c *ClassRepository_GetClassesForStudentByWeekday_Call) RunAndReturn(run func(int, string) ([]models.Class, error)) *ClassRepository_GetClassesForStudentByWeekday_Call {
+func (_c *ClassRepository_GetClassesForStudentByWeekday_Call) RunAndReturn(run func(string, string) ([]models.Class, error)) *ClassRepository_GetClassesForStudentByWeekday_Call {
 	_c.Call.Return(run)
 	return _c
 }

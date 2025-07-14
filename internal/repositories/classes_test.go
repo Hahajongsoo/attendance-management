@@ -13,7 +13,7 @@ func TestGetClassesForStudentByWeekday_Success(t *testing.T) {
 	db, mock := SetupMockDB(t)
 	defer db.Close()
 
-	class_id := 1
+	class_id := "1"
 	weekday := "월"
 
 	query := `
@@ -43,7 +43,7 @@ func TestGetClassesForStudentByWeekday_Error(t *testing.T) {
 	db, mock := SetupMockDB(t)
 	defer db.Close()
 
-	class_id := 1
+	class_id := "1"
 	weekday := "월"
 
 	query := `
