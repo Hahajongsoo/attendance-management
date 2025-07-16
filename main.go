@@ -27,7 +27,7 @@ func main() {
 	teacherService := services.NewTeacherService(teacherRepo)
 	enrollmentService := services.NewEnrollmentService(enrollmentRepo)
 	classService := services.NewClassService(classRepo)
-	attendanceService := services.NewAttendanceService(attendanceRepo)
+	attendanceService := services.NewAttendanceService(attendanceRepo, classRepo)
 
 	studentHandler := handlers.NewStudentHandler(studentService)
 	teacherHandler := handlers.NewTeacherHandler(teacherService)
