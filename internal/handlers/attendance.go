@@ -33,6 +33,19 @@ func (h *AttendanceHandler) AttendanceHandler(w http.ResponseWriter, r *http.Req
 	}
 }
 
+// GetAttendance 학생별 특정 날짜 출결을 조회합니다
+// @Summary 학생별 특정 날짜 출결 조회
+// @Description 특정 학생의 특정 날짜 출결 정보를 조회합니다
+// @Tags attendance
+// @Accept json
+// @Produce json
+// @Param student_id path string true "학생 ID"
+// @Param date path string true "날짜 (YYYY-MM-DD)"
+// @Success 200 {object} models.Attendance
+// @Failure 400 {string} string "Bad Request"
+// @Failure 404 {string} string "Attendance not found"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /students/{student_id}/attendance/{date} [get]
 func (h *AttendanceHandler) GetAttendance(w http.ResponseWriter, r *http.Request) {
 	studentID := getIDFromPath(r.URL.Path)
 	if studentID == "" {
@@ -60,6 +73,19 @@ func (h *AttendanceHandler) GetAttendance(w http.ResponseWriter, r *http.Request
 	writeJSON(w, http.StatusOK, attendance)
 }
 
+// CreateAttendance 학생별 특정 날짜 출결을 등록합니다
+// @Summary 출결 등록
+// @Description 특정 학생의 특정 날짜 출결을 등록합니다
+// @Tags attendance
+// @Accept json
+// @Produce json
+// @Param student_id path string true "학생 ID"
+// @Param date path string true "날짜 (YYYY-MM-DD)"
+// @Param attendance body models.Attendance true "출결 정보"
+// @Success 201 {object} map[string]string
+// @Failure 400 {string} string "Bad Request"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /students/{student_id}/attendance/{date} [post]
 func (h *AttendanceHandler) CreateAttendance(w http.ResponseWriter, r *http.Request) {
 	studentID := getIDFromPath(r.URL.Path)
 	if studentID == "" {
@@ -98,6 +124,20 @@ func (h *AttendanceHandler) CreateAttendance(w http.ResponseWriter, r *http.Requ
 	writeJSON(w, http.StatusCreated, map[string]string{"message": "Attendance created"})
 }
 
+// UpdateAttendance 학생별 특정 날짜 출결을 수정합니다
+// @Summary 출결 수정
+// @Description 특정 학생의 특정 날짜 출결을 수정합니다
+// @Tags attendance
+// @Accept json
+// @Produce json
+// @Param student_id path string true "학생 ID"
+// @Param date path string true "날짜 (YYYY-MM-DD)"
+// @Param attendance body models.Attendance true "수정할 출결 정보"
+// @Success 200 {object} map[string]string
+// @Failure 400 {string} string "Bad Request"
+// @Failure 404 {string} string "Attendance not found"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /students/{student_id}/attendance/{date} [put]
 func (h *AttendanceHandler) UpdateAttendance(w http.ResponseWriter, r *http.Request) {
 	studentID := getIDFromPath(r.URL.Path)
 	if studentID == "" {
@@ -139,6 +179,19 @@ func (h *AttendanceHandler) UpdateAttendance(w http.ResponseWriter, r *http.Requ
 	writeJSON(w, http.StatusOK, map[string]string{"message": "Attendance updated"})
 }
 
+// DeleteAttendance 학생별 특정 날짜 출결을 삭제합니다
+// @Summary 출결 삭제
+// @Description 특정 학생의 특정 날짜 출결을 삭제합니다
+// @Tags attendance
+// @Accept json
+// @Produce json
+// @Param student_id path string true "학생 ID"
+// @Param date path string true "날짜 (YYYY-MM-DD)"
+// @Success 200 {object} map[string]string
+// @Failure 400 {string} string "Bad Request"
+// @Failure 404 {string} string "Attendance not found"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /students/{student_id}/attendance/{date} [delete]
 func (h *AttendanceHandler) DeleteAttendance(w http.ResponseWriter, r *http.Request) {
 	studentID := getIDFromPath(r.URL.Path)
 	if studentID == "" {
@@ -166,11 +219,25 @@ func (h *AttendanceHandler) DeleteAttendance(w http.ResponseWriter, r *http.Requ
 	writeJSON(w, http.StatusOK, map[string]string{"message": "Attendance deleted"})
 }
 
+// getDateFromPath URL 경로에서 날짜를 추출합니다
+// @Summary 날짜 추출
+// @Description URL 경로에서 날짜를 추출합니다
 func getDateFromPath(path string) string {
 	parts := strings.Split(strings.Trim(path, "/"), "/")
 	return parts[len(parts)-1]
 }
 
+// AttendanceByDateHandler 날짜별 전체 출결을 조회합니다
+// @Summary 날짜별 전체 출결 조회
+// @Description 특정 날짜의 모든 학생 출결 정보를 조회합니다
+// @Tags attendance
+// @Accept json
+// @Produce json
+// @Param date path string true "날짜 (YYYY-MM-DD)"
+// @Success 200 {array} models.Attendance
+// @Failure 400 {string} string "Bad Request"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /attendance/{date} [get]
 func (h *AttendanceHandler) AttendanceByDateHandler(w http.ResponseWriter, r *http.Request) {
 	date := getDateFromPath(r.URL.Path)
 	if date == "" {

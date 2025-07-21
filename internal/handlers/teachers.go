@@ -42,6 +42,15 @@ func (h *TeacherHandler) TeacherByIDHandler(w http.ResponseWriter, r *http.Reque
 	}
 }
 
+// GetTeachers 전체 교사 목록을 조회합니다
+// @Summary 전체 교사 목록 조회
+// @Description 등록된 모든 교사의 목록을 조회합니다
+// @Tags teachers
+// @Accept json
+// @Produce json
+// @Success 200 {array} models.TeacherResponse
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /teachers [get]
 func (h *TeacherHandler) GetTeachers(w http.ResponseWriter, r *http.Request) {
 	teachers, err := h.Service.GetAllTeachers()
 	if err != nil {
@@ -57,6 +66,17 @@ func (h *TeacherHandler) GetTeachers(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, teacherResponses)
 }
 
+// CreateTeacher 새로운 교사를 등록합니다
+// @Summary 교사 등록
+// @Description 새로운 교사를 등록합니다
+// @Tags teachers
+// @Accept json
+// @Produce json
+// @Param teacher body models.Teacher true "교사 정보"
+// @Success 201 {object} map[string]string
+// @Failure 400 {string} string "Bad Request"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /teachers [post]
 func (h *TeacherHandler) CreateTeacher(w http.ResponseWriter, r *http.Request) {
 	var teacher models.Teacher
 	if err := json.NewDecoder(r.Body).Decode(&teacher); err != nil {
@@ -74,6 +94,18 @@ func (h *TeacherHandler) CreateTeacher(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusCreated, map[string]string{"message": "Teacher created"})
 }
 
+// GetTeacherByID 특정 교사의 정보를 조회합니다
+// @Summary 특정 교사 조회
+// @Description 특정 교사의 정보를 조회합니다
+// @Tags teachers
+// @Accept json
+// @Produce json
+// @Param teacher_id path string true "교사 ID"
+// @Success 200 {object} models.TeacherResponse
+// @Failure 400 {string} string "Bad Request"
+// @Failure 404 {string} string "Teacher not found"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /teachers/{teacher_id} [get]
 func (h *TeacherHandler) GetTeacherByID(w http.ResponseWriter, r *http.Request) {
 	teacherID := getIDFromPath(r.URL.Path)
 	if teacherID == "" {
@@ -94,6 +126,19 @@ func (h *TeacherHandler) GetTeacherByID(w http.ResponseWriter, r *http.Request) 
 	writeJSON(w, http.StatusOK, teacher.ToResponse())
 }
 
+// UpdateTeacherByID 특정 교사의 정보를 수정합니다
+// @Summary 교사 정보 수정
+// @Description 특정 교사의 정보를 수정합니다
+// @Tags teachers
+// @Accept json
+// @Produce json
+// @Param teacher_id path string true "교사 ID"
+// @Param teacher body models.Teacher true "수정할 교사 정보"
+// @Success 200 {object} map[string]string
+// @Failure 400 {string} string "Bad Request"
+// @Failure 404 {string} string "Teacher not found"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /teachers/{teacher_id} [put]
 func (h *TeacherHandler) UpdateTeacherByID(w http.ResponseWriter, r *http.Request) {
 	teacherID := getIDFromPath(r.URL.Path)
 	if teacherID == "" {
@@ -120,6 +165,18 @@ func (h *TeacherHandler) UpdateTeacherByID(w http.ResponseWriter, r *http.Reques
 	writeJSON(w, http.StatusOK, map[string]string{"message": "Teacher updated"})
 }
 
+// DeleteTeacherByID 특정 교사를 삭제합니다
+// @Summary 교사 삭제
+// @Description 특정 교사를 삭제합니다
+// @Tags teachers
+// @Accept json
+// @Produce json
+// @Param teacher_id path string true "교사 ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {string} string "Bad Request"
+// @Failure 404 {string} string "Teacher not found"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /teachers/{teacher_id} [delete]
 func (h *TeacherHandler) DeleteTeacherByID(w http.ResponseWriter, r *http.Request) {
 	teacherID := getIDFromPath(r.URL.Path)
 	if teacherID == "" {

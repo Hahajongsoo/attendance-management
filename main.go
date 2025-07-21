@@ -1,3 +1,21 @@
+// @title 출결 관리 시스템 API
+// @version 1.0
+// @description 학원 출결 관리 시스템을 위한 RESTful API
+// @termsOfService http://swagger.io/terms/
+
+// @contact.name API Support
+// @contact.url http://www.swagger.io/support
+// @contact.email support@swagger.io
+
+// @license.name MIT
+// @license.url https://opensource.org/licenses/MIT
+
+// @host localhost:8080
+// @BasePath /
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
 package main
 
 import (
@@ -10,10 +28,15 @@ import (
 	"attendance-management/internal/repositories"
 	"attendance-management/internal/services"
 
+	_ "attendance-management/docs"
+
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
+// @Summary 서버 시작
+// @Description 출결 관리 시스템 서버를 시작합니다
 func main() {
 	db, err := database.Connect()
 	if err != nil {
@@ -46,5 +69,13 @@ func main() {
 
 	handler := handlers.NewHandler(db, enrollmentHandler, studentHandler, attendanceHandler, classHandler, teacherHandler)
 
-	http.ListenAndServe(":8080", handler)
+	mux := http.NewServeMux()
+
+	mux.Handle("/swagger/", httpSwagger.Handler(
+		httpSwagger.URL("http://localhost:8080/swagger/doc.json"),
+	))
+
+	mux.Handle("/", handler)
+
+	http.ListenAndServe(":8080", mux)
 }

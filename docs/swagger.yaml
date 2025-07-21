@@ -1,0 +1,1059 @@
+basePath: /
+definitions:
+  models.Attendance:
+    description: 출결 정보 모델
+    properties:
+      check_in:
+        example: "13:55"
+        type: string
+      check_out:
+        example: "15:35"
+        type: string
+      date:
+        example: "2024-01-15"
+        type: string
+      status:
+        enum:
+        - 출석
+        - 결석
+        - 지각
+        example: 출석
+        type: string
+      student_id:
+        example: 1001
+        type: integer
+    type: object
+  models.Class:
+    description: 수업 정보 모델
+    properties:
+      class_id:
+        example: 1
+        type: integer
+      class_name:
+        example: 수학 기초반
+        maxLength: 50
+        type: string
+      days:
+        example: 월,수,금
+        maxLength: 20
+        type: string
+      end_time:
+        example: "15:30"
+        type: string
+      price:
+        example: 150000
+        minimum: 0
+        type: integer
+      start_time:
+        example: "14:00"
+        type: string
+      teacher_id:
+        example: T001
+        maxLength: 30
+        type: string
+    type: object
+  models.Enrollment:
+    description: 수강신청 정보 모델
+    properties:
+      class_id:
+        example: 1
+        type: integer
+      enrolled_date:
+        example: "2024-01-15"
+        type: string
+      enrollment_id:
+        example: 1
+        type: integer
+      student_id:
+        example: 1001
+        type: integer
+    type: object
+  models.Student:
+    description: 학생 정보 모델
+    properties:
+      grade:
+        example: 초등 3학년
+        maxLength: 10
+        type: string
+      name:
+        example: 홍길동
+        maxLength: 20
+        type: string
+      parent_phone:
+        example: 010-9876-5432
+        maxLength: 15
+        type: string
+      phone:
+        example: 010-1234-5678
+        maxLength: 15
+        type: string
+      student_id:
+        example: 1001
+        maximum: 99999
+        minimum: 1000
+        type: integer
+    type: object
+  models.Teacher:
+    description: 교사 정보 모델
+    properties:
+      name:
+        example: 김선생님
+        maxLength: 30
+        type: string
+      password:
+        example: hashed_password
+        maxLength: 100
+        type: string
+      phone:
+        example: 010-1111-2222
+        maxLength: 20
+        type: string
+      teacher_id:
+        example: T001
+        maxLength: 30
+        type: string
+    type: object
+  models.TeacherResponse:
+    description: 교사 응답 정보 모델
+    properties:
+      name:
+        example: 김선생님
+        type: string
+      phone:
+        example: 010-1111-2222
+        type: string
+      teacher_id:
+        example: T001
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: 학원 출결 관리 시스템을 위한 RESTful API
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: 출결 관리 시스템 API
+  version: "1.0"
+paths:
+  /attendance/{date}:
+    get:
+      consumes:
+      - application/json
+      description: 특정 날짜의 모든 학생 출결 정보를 조회합니다
+      parameters:
+      - description: 날짜 (YYYY-MM-DD)
+        in: path
+        name: date
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Attendance'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 날짜별 전체 출결 조회
+      tags:
+      - attendance
+  /classes:
+    get:
+      consumes:
+      - application/json
+      description: 등록된 모든 수업의 목록을 조회합니다
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Class'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 전체 수업 목록 조회
+      tags:
+      - classes
+    post:
+      consumes:
+      - application/json
+      description: 새로운 수업을 등록합니다
+      parameters:
+      - description: 수업 정보
+        in: body
+        name: class
+        required: true
+        schema:
+          $ref: '#/definitions/models.Class'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 수업 등록
+      tags:
+      - classes
+  /classes/{class_id}:
+    delete:
+      consumes:
+      - application/json
+      description: 특정 수업을 삭제합니다
+      parameters:
+      - description: 수업 ID
+        in: path
+        name: class_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Class not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 수업 삭제
+      tags:
+      - classes
+    get:
+      consumes:
+      - application/json
+      description: 특정 수업의 정보를 조회합니다
+      parameters:
+      - description: 수업 ID
+        in: path
+        name: class_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Class'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Class not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 특정 수업 조회
+      tags:
+      - classes
+    put:
+      consumes:
+      - application/json
+      description: 특정 수업의 정보를 수정합니다
+      parameters:
+      - description: 수업 ID
+        in: path
+        name: class_id
+        required: true
+        type: string
+      - description: 수정할 수업 정보
+        in: body
+        name: class
+        required: true
+        schema:
+          $ref: '#/definitions/models.Class'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Class not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 수업 정보 수정
+      tags:
+      - classes
+  /classes/{class_id}/enrollments:
+    get:
+      consumes:
+      - application/json
+      description: 특정 수업의 수강신청 목록을 조회합니다
+      parameters:
+      - description: 수업 ID
+        in: path
+        name: class_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Enrollment'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 수업별 수강신청 목록 조회
+      tags:
+      - enrollments
+  /enrollments:
+    get:
+      consumes:
+      - application/json
+      description: 모든 수강신청 목록을 조회합니다
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Enrollment'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 전체 수강신청 목록 조회
+      tags:
+      - enrollments
+    post:
+      consumes:
+      - application/json
+      description: 새로운 수강신청을 등록합니다
+      parameters:
+      - description: 수강신청 정보
+        in: body
+        name: enrollment
+        required: true
+        schema:
+          $ref: '#/definitions/models.Enrollment'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 수강신청 등록
+      tags:
+      - enrollments
+  /enrollments/{enrollment_id}:
+    delete:
+      consumes:
+      - application/json
+      description: 특정 수강신청을 삭제합니다
+      parameters:
+      - description: 수강신청 ID
+        in: path
+        name: enrollment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Enrollment not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 수강신청 삭제
+      tags:
+      - enrollments
+    get:
+      consumes:
+      - application/json
+      description: 특정 수강신청의 정보를 조회합니다
+      parameters:
+      - description: 수강신청 ID
+        in: path
+        name: enrollment_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Enrollment'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Enrollment not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 특정 수강신청 조회
+      tags:
+      - enrollments
+    put:
+      consumes:
+      - application/json
+      description: 특정 수강신청의 정보를 수정합니다
+      parameters:
+      - description: 수강신청 ID
+        in: path
+        name: enrollment_id
+        required: true
+        type: string
+      - description: 수정할 수강신청 정보
+        in: body
+        name: enrollment
+        required: true
+        schema:
+          $ref: '#/definitions/models.Enrollment'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Enrollment not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 수강신청 정보 수정
+      tags:
+      - enrollments
+  /students:
+    get:
+      consumes:
+      - application/json
+      description: 등록된 모든 학생의 목록을 조회합니다
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Student'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 전체 학생 목록 조회
+      tags:
+      - students
+    post:
+      consumes:
+      - application/json
+      description: 새로운 학생을 등록합니다
+      parameters:
+      - description: 학생 정보
+        in: body
+        name: student
+        required: true
+        schema:
+          $ref: '#/definitions/models.Student'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+      summary: 학생 등록
+      tags:
+      - students
+  /students/{student_id}:
+    delete:
+      consumes:
+      - application/json
+      description: 특정 학생을 삭제합니다
+      parameters:
+      - description: 학생 ID
+        in: path
+        name: student_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 학생 삭제
+      tags:
+      - students
+    get:
+      consumes:
+      - application/json
+      description: 특정 학생의 정보를 조회합니다
+      parameters:
+      - description: 학생 ID
+        in: path
+        name: student_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Student'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Student not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 특정 학생 조회
+      tags:
+      - students
+    put:
+      consumes:
+      - application/json
+      description: 특정 학생의 정보를 수정합니다
+      parameters:
+      - description: 학생 ID
+        in: path
+        name: student_id
+        required: true
+        type: string
+      - description: 수정할 학생 정보
+        in: body
+        name: student
+        required: true
+        schema:
+          $ref: '#/definitions/models.Student'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Student not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 학생 정보 수정
+      tags:
+      - students
+  /students/{student_id}/attendance/{date}:
+    delete:
+      consumes:
+      - application/json
+      description: 특정 학생의 특정 날짜 출결을 삭제합니다
+      parameters:
+      - description: 학생 ID
+        in: path
+        name: student_id
+        required: true
+        type: string
+      - description: 날짜 (YYYY-MM-DD)
+        in: path
+        name: date
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Attendance not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 출결 삭제
+      tags:
+      - attendance
+    get:
+      consumes:
+      - application/json
+      description: 특정 학생의 특정 날짜 출결 정보를 조회합니다
+      parameters:
+      - description: 학생 ID
+        in: path
+        name: student_id
+        required: true
+        type: string
+      - description: 날짜 (YYYY-MM-DD)
+        in: path
+        name: date
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Attendance'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Attendance not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 학생별 특정 날짜 출결 조회
+      tags:
+      - attendance
+    post:
+      consumes:
+      - application/json
+      description: 특정 학생의 특정 날짜 출결을 등록합니다
+      parameters:
+      - description: 학생 ID
+        in: path
+        name: student_id
+        required: true
+        type: string
+      - description: 날짜 (YYYY-MM-DD)
+        in: path
+        name: date
+        required: true
+        type: string
+      - description: 출결 정보
+        in: body
+        name: attendance
+        required: true
+        schema:
+          $ref: '#/definitions/models.Attendance'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 출결 등록
+      tags:
+      - attendance
+    put:
+      consumes:
+      - application/json
+      description: 특정 학생의 특정 날짜 출결을 수정합니다
+      parameters:
+      - description: 학생 ID
+        in: path
+        name: student_id
+        required: true
+        type: string
+      - description: 날짜 (YYYY-MM-DD)
+        in: path
+        name: date
+        required: true
+        type: string
+      - description: 수정할 출결 정보
+        in: body
+        name: attendance
+        required: true
+        schema:
+          $ref: '#/definitions/models.Attendance'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Attendance not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 출결 수정
+      tags:
+      - attendance
+  /students/{student_id}/enrollments:
+    get:
+      consumes:
+      - application/json
+      description: 특정 학생의 수강신청 목록을 조회합니다
+      parameters:
+      - description: 학생 ID
+        in: path
+        name: student_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Enrollment'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 학생별 수강신청 목록 조회
+      tags:
+      - enrollments
+  /teachers:
+    get:
+      consumes:
+      - application/json
+      description: 등록된 모든 교사의 목록을 조회합니다
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.TeacherResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 전체 교사 목록 조회
+      tags:
+      - teachers
+    post:
+      consumes:
+      - application/json
+      description: 새로운 교사를 등록합니다
+      parameters:
+      - description: 교사 정보
+        in: body
+        name: teacher
+        required: true
+        schema:
+          $ref: '#/definitions/models.Teacher'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 교사 등록
+      tags:
+      - teachers
+  /teachers/{teacher_id}:
+    delete:
+      consumes:
+      - application/json
+      description: 특정 교사를 삭제합니다
+      parameters:
+      - description: 교사 ID
+        in: path
+        name: teacher_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Teacher not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 교사 삭제
+      tags:
+      - teachers
+    get:
+      consumes:
+      - application/json
+      description: 특정 교사의 정보를 조회합니다
+      parameters:
+      - description: 교사 ID
+        in: path
+        name: teacher_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.TeacherResponse'
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Teacher not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 특정 교사 조회
+      tags:
+      - teachers
+    put:
+      consumes:
+      - application/json
+      description: 특정 교사의 정보를 수정합니다
+      parameters:
+      - description: 교사 ID
+        in: path
+        name: teacher_id
+        required: true
+        type: string
+      - description: 수정할 교사 정보
+        in: body
+        name: teacher
+        required: true
+        schema:
+          $ref: '#/definitions/models.Teacher'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "404":
+          description: Teacher not found
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 교사 정보 수정
+      tags:
+      - teachers
+  /teachers/{teacher_id}/classes:
+    get:
+      consumes:
+      - application/json
+      description: 특정 교사가 담당하는 수업 목록을 조회합니다
+      parameters:
+      - description: 교사 ID
+        in: path
+        name: teacher_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Class'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            type: string
+      summary: 교사별 수업 목록 조회
+      tags:
+      - classes
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

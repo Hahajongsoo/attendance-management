@@ -27,6 +27,15 @@ func (h *ClassHandler) ClassHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetClasses 전체 수업 목록을 조회합니다
+// @Summary 전체 수업 목록 조회
+// @Description 등록된 모든 수업의 목록을 조회합니다
+// @Tags classes
+// @Accept json
+// @Produce json
+// @Success 200 {array} models.Class
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /classes [get]
 func (h *ClassHandler) GetClasses(w http.ResponseWriter, r *http.Request) {
 	classes, err := h.Service.GetAllClasses()
 	if err != nil {
@@ -37,6 +46,17 @@ func (h *ClassHandler) GetClasses(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, classes)
 }
 
+// CreateClass 새로운 수업을 등록합니다
+// @Summary 수업 등록
+// @Description 새로운 수업을 등록합니다
+// @Tags classes
+// @Accept json
+// @Produce json
+// @Param class body models.Class true "수업 정보"
+// @Success 201 {object} map[string]string
+// @Failure 400 {string} string "Bad Request"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /classes [post]
 func (h *ClassHandler) CreateClass(w http.ResponseWriter, r *http.Request) {
 	var class models.Class
 	if err := json.NewDecoder(r.Body).Decode(&class); err != nil {
@@ -66,6 +86,18 @@ func (h *ClassHandler) ClassByIDHandler(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
+// GetClassByID 특정 수업의 정보를 조회합니다
+// @Summary 특정 수업 조회
+// @Description 특정 수업의 정보를 조회합니다
+// @Tags classes
+// @Accept json
+// @Produce json
+// @Param class_id path string true "수업 ID"
+// @Success 200 {object} models.Class
+// @Failure 400 {string} string "Bad Request"
+// @Failure 404 {string} string "Class not found"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /classes/{class_id} [get]
 func (h *ClassHandler) GetClassByID(w http.ResponseWriter, r *http.Request) {
 	classID := getIDFromPath(r.URL.Path)
 	if classID == "" {
@@ -86,6 +118,19 @@ func (h *ClassHandler) GetClassByID(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, class)
 }
 
+// UpdateClassByID 특정 수업의 정보를 수정합니다
+// @Summary 수업 정보 수정
+// @Description 특정 수업의 정보를 수정합니다
+// @Tags classes
+// @Accept json
+// @Produce json
+// @Param class_id path string true "수업 ID"
+// @Param class body models.Class true "수정할 수업 정보"
+// @Success 200 {object} map[string]string
+// @Failure 400 {string} string "Bad Request"
+// @Failure 404 {string} string "Class not found"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /classes/{class_id} [put]
 func (h *ClassHandler) UpdateClassByID(w http.ResponseWriter, r *http.Request) {
 	classID := getIDFromPath(r.URL.Path)
 	if classID == "" {
@@ -112,6 +157,18 @@ func (h *ClassHandler) UpdateClassByID(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"message": "Class updated"})
 }
 
+// DeleteClassByID 특정 수업을 삭제합니다
+// @Summary 수업 삭제
+// @Description 특정 수업을 삭제합니다
+// @Tags classes
+// @Accept json
+// @Produce json
+// @Param class_id path string true "수업 ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {string} string "Bad Request"
+// @Failure 404 {string} string "Class not found"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /classes/{class_id} [delete]
 func (h *ClassHandler) DeleteClassByID(w http.ResponseWriter, r *http.Request) {
 	classID := getIDFromPath(r.URL.Path)
 	if classID == "" {
@@ -132,6 +189,17 @@ func (h *ClassHandler) DeleteClassByID(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"message": "Class deleted"})
 }
 
+// ClassByTeacherIDHandler 교사별 수업 목록을 조회합니다
+// @Summary 교사별 수업 목록 조회
+// @Description 특정 교사가 담당하는 수업 목록을 조회합니다
+// @Tags classes
+// @Accept json
+// @Produce json
+// @Param teacher_id path string true "교사 ID"
+// @Success 200 {array} models.Class
+// @Failure 400 {string} string "Bad Request"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /teachers/{teacher_id}/classes [get]
 func (h *ClassHandler) ClassByTeacherIDHandler(w http.ResponseWriter, r *http.Request) {
 	teacherID := getIDFromPath(r.URL.Path)
 	if teacherID == "" {

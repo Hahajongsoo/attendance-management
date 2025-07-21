@@ -28,6 +28,15 @@ func (h *EnrollmentHandler) EnrollmentHandler(w http.ResponseWriter, r *http.Req
 	}
 }
 
+// GetEnrollments 전체 수강신청 목록을 조회합니다
+// @Summary 전체 수강신청 목록 조회
+// @Description 모든 수강신청 목록을 조회합니다
+// @Tags enrollments
+// @Accept json
+// @Produce json
+// @Success 200 {array} models.Enrollment
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /enrollments [get]
 func (h *EnrollmentHandler) GetEnrollments(w http.ResponseWriter, r *http.Request) {
 	enrollments, err := h.Service.GetAllEnrollments()
 	if err != nil {
@@ -38,6 +47,17 @@ func (h *EnrollmentHandler) GetEnrollments(w http.ResponseWriter, r *http.Reques
 	writeJSON(w, http.StatusOK, enrollments)
 }
 
+// CreateEnrollment 새로운 수강신청을 등록합니다
+// @Summary 수강신청 등록
+// @Description 새로운 수강신청을 등록합니다
+// @Tags enrollments
+// @Accept json
+// @Produce json
+// @Param enrollment body models.Enrollment true "수강신청 정보"
+// @Success 201 {object} map[string]string
+// @Failure 400 {string} string "Bad Request"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /enrollments [post]
 func (h *EnrollmentHandler) CreateEnrollment(w http.ResponseWriter, r *http.Request) {
 	var enrollment models.Enrollment
 	if err := json.NewDecoder(r.Body).Decode(&enrollment); err != nil {
@@ -67,6 +87,18 @@ func (h *EnrollmentHandler) EnrollmentByIDHandler(w http.ResponseWriter, r *http
 	}
 }
 
+// GetEnrollmentByID 특정 수강신청의 정보를 조회합니다
+// @Summary 특정 수강신청 조회
+// @Description 특정 수강신청의 정보를 조회합니다
+// @Tags enrollments
+// @Accept json
+// @Produce json
+// @Param enrollment_id path string true "수강신청 ID"
+// @Success 200 {object} models.Enrollment
+// @Failure 400 {string} string "Bad Request"
+// @Failure 404 {string} string "Enrollment not found"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /enrollments/{enrollment_id} [get]
 func (h *EnrollmentHandler) GetEnrollmentByID(w http.ResponseWriter, r *http.Request) {
 	enrollmentID := getIDFromPath(r.URL.Path)
 	if enrollmentID == "" {
@@ -87,6 +119,19 @@ func (h *EnrollmentHandler) GetEnrollmentByID(w http.ResponseWriter, r *http.Req
 	writeJSON(w, http.StatusOK, enrollment)
 }
 
+// UpdateEnrollmentByID 특정 수강신청의 정보를 수정합니다
+// @Summary 수강신청 정보 수정
+// @Description 특정 수강신청의 정보를 수정합니다
+// @Tags enrollments
+// @Accept json
+// @Produce json
+// @Param enrollment_id path string true "수강신청 ID"
+// @Param enrollment body models.Enrollment true "수정할 수강신청 정보"
+// @Success 200 {object} map[string]string
+// @Failure 400 {string} string "Bad Request"
+// @Failure 404 {string} string "Enrollment not found"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /enrollments/{enrollment_id} [put]
 func (h *EnrollmentHandler) UpdateEnrollmentByID(w http.ResponseWriter, r *http.Request) {
 	enrollmentID := getIDFromPath(r.URL.Path)
 	if enrollmentID == "" {
@@ -113,6 +158,18 @@ func (h *EnrollmentHandler) UpdateEnrollmentByID(w http.ResponseWriter, r *http.
 	writeJSON(w, http.StatusOK, map[string]string{"message": "Enrollment updated"})
 }
 
+// DeleteEnrollmentByID 특정 수강신청을 삭제합니다
+// @Summary 수강신청 삭제
+// @Description 특정 수강신청을 삭제합니다
+// @Tags enrollments
+// @Accept json
+// @Produce json
+// @Param enrollment_id path string true "수강신청 ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {string} string "Bad Request"
+// @Failure 404 {string} string "Enrollment not found"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /enrollments/{enrollment_id} [delete]
 func (h *EnrollmentHandler) DeleteEnrollmentByID(w http.ResponseWriter, r *http.Request) {
 	enrollmentID := getIDFromPath(r.URL.Path)
 	if enrollmentID == "" {
@@ -133,6 +190,17 @@ func (h *EnrollmentHandler) DeleteEnrollmentByID(w http.ResponseWriter, r *http.
 	writeJSON(w, http.StatusOK, map[string]string{"message": "Enrollment deleted"})
 }
 
+// EnrollmentByStudentIDHandler 학생별 수강신청 목록을 조회합니다
+// @Summary 학생별 수강신청 목록 조회
+// @Description 특정 학생의 수강신청 목록을 조회합니다
+// @Tags enrollments
+// @Accept json
+// @Produce json
+// @Param student_id path string true "학생 ID"
+// @Success 200 {array} models.Enrollment
+// @Failure 400 {string} string "Bad Request"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /students/{student_id}/enrollments [get]
 func (h *EnrollmentHandler) EnrollmentByStudentIDHandler(w http.ResponseWriter, r *http.Request) {
 	studentID := getIDFromPath(r.URL.Path)
 	if studentID == "" {
@@ -149,6 +217,17 @@ func (h *EnrollmentHandler) EnrollmentByStudentIDHandler(w http.ResponseWriter, 
 	writeJSON(w, http.StatusOK, enrollments)
 }
 
+// EnrollmentByClassIDHandler 수업별 수강신청 목록을 조회합니다
+// @Summary 수업별 수강신청 목록 조회
+// @Description 특정 수업의 수강신청 목록을 조회합니다
+// @Tags enrollments
+// @Accept json
+// @Produce json
+// @Param class_id path string true "수업 ID"
+// @Success 200 {array} models.Enrollment
+// @Failure 400 {string} string "Bad Request"
+// @Failure 500 {string} string "Internal Server Error"
+// @Router /classes/{class_id}/enrollments [get]
 func (h *EnrollmentHandler) EnrollmentByClassIDHandler(w http.ResponseWriter, r *http.Request) {
 	classID := getIDFromPath(r.URL.Path)
 	if classID == "" {
